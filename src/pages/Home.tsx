@@ -1,26 +1,42 @@
 import { FC, useEffect, useState } from "react";
 import Button from '../components/common/Button'
 import { ButtonType } from "../components/common/Button";
+import { useQuery } from '@tanstack/react-query';
+import { fetchTasks } from '../services/api';
+import { Cog } from "lucide-react";
 
-export interface Todo {
+export interface Task {
   text: string;
   state: 'done' | 'pending' | 'on-hold'
 }
 
-const taskStates: Todo['state'][] = ['done', 'pending', 'on-hold'];
+const taskStates: Task['state'][] = ['done', 'pending', 'on-hold'];
 
 const Home: FC = () => {
-  const [todos, SetTodos] = useState<Todo[]>([]);
+
+  // query data
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['tasks'],
+    queryFn: fetchTasks
+  });
+
+  const [tasks, SetTasks] = useState<Task[]>([]);
   const [selectedState, SetSelectedState] = useState('');
   const [inputText, SetInputText] = useState('');
   const [uxError, SetUxError] = useState(false);
-  const [editMode, SetEditMode] = useState({ taskNum: -1, edit: false }); // Track which task is being edited
+  const [editMode, SetEditMode] = useState({ taskNum: -1, edit: false });
   const [editInputText, SetEditInputText] = useState('');
-  const [editState, SetEditState] = useState<Todo['state']>('pending');
+  const [editState, SetEditState] = useState<Task['state']>('pending');
+
+  useEffect(() => {
+    if (data) {
+      SetTasks(data);
+    }
+  }, [data]);
 
   const HandleNewTask = () => {
     if (selectedState.length > 0 && inputText.length > 0) {
-      SetTodos([...todos, { text: inputText, state: selectedState as Todo['state'] }]);
+      SetTasks([...tasks, { text: inputText, state: selectedState as Task['state'] }]);
       SetInputText('');
       SetSelectedState('');
     }
@@ -28,21 +44,21 @@ const Home: FC = () => {
 
   const HandleEditMode = (taskNum: number) => {
     SetEditMode({ taskNum, edit: true });
-    SetEditInputText(todos[taskNum].text);
-    SetEditState(todos[taskNum].state);
+    SetEditInputText(tasks[taskNum].text);
+    SetEditState(tasks[taskNum].state);
   };
 
   const SaveEditedTask = () => {
-    const updatedTodos = [...todos];
-    updatedTodos[editMode.taskNum] = { text: editInputText, state: editState }; // Update task text and state
-    SetTodos(updatedTodos);
-    SetEditMode({ taskNum: -1, edit: false }); // Exit edit mode
+    const updatedTodos = [...tasks];
+    updatedTodos[editMode.taskNum] = { text: editInputText, state: editState };
+    SetTasks(updatedTodos);
+    SetEditMode({ taskNum: -1, edit: false });
   };
 
   const HandleRemoveTask = (taskIndex: number) => {
-    const updatedTodos = [...todos];
+    const updatedTodos = [...tasks];
     updatedTodos.splice(taskIndex, 1);
-    SetTodos(updatedTodos);
+    SetTasks(updatedTodos);
   };
 
   useEffect(() => {
@@ -78,9 +94,10 @@ const Home: FC = () => {
       <div className="flex flex-col justify-center items-center mt-10">
         <h2 className=" text-2xl">Task list</h2>
         <div className="mt-10 p-20 bg-gray-600 w-fit rounded-xl max-w-5xl">
-          {todos.length > 0 ?
-            todos.map((todo, i) =>
-              <div className="flex mb-5" key={todo.text}>
+          {isLoading ? <Cog size={80} color="#1a1a1a" className="animate-spin" /> : error ? <p>Error loading tasks...</p> :
+          tasks.length > 0 ?
+            tasks.map((task, i) =>
+              <div className="flex mb-5" key={task.text}>
                 {editMode.edit && editMode.taskNum === i ?
                   <div className="flex items-center bg-[#1a1a1a] pl-5 rounded-xl w-full">
                     <input
@@ -103,9 +120,9 @@ const Home: FC = () => {
                 :
                 <>
                   <div className="flex items-center bg-[#1a1a1a] px-5 rounded-l-xl w-full">
-                    <p className='rounded-l-xl p-2'>{todo.text}</p>
+                    <p className='rounded-l-xl p-2'>{task.text}</p>
                   </div>
-                  <div className={`px-5 w-40 flex items-center justify-center pointer-events-none ${todo.state === 'done' && 'bg-emerald-800' || todo.state === 'pending' && 'bg-orange-800' || todo.state === 'on-hold' && 'bg-red-800'}`}>{todo.state === 'on-hold' ? 'on hold' : todo.state}</div>
+                  <div className={`px-5 w-40 flex items-center justify-center pointer-events-none ${task.state === 'done' && 'bg-emerald-800' || task.state === 'pending' && 'bg-orange-800' || task.state === 'on-hold' && 'bg-red-800'}`}>{task.state === 'on-hold' ? 'on hold' : task.state}</div>
                   <Button type={ButtonType.Edit} uxError={false} onClick={() => HandleEditMode(i)} />
                   <Button type={ButtonType.Remove} uxError={false} onClick={() => HandleRemoveTask(i)} />
                 </>
