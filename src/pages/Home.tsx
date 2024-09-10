@@ -3,7 +3,7 @@ import Button from '../components/common/Button'
 import { ButtonType } from "../components/common/Button";
 import { useQuery } from '@tanstack/react-query';
 import { fetchTasks } from '../services/querys';
-import { Loader } from "lucide-react";
+import { Loader, CircleX } from "lucide-react";
 import { useCreateTask, useDeleteTask, useEditTask } from "../services/mutations";
 
 export interface Task {
@@ -15,6 +15,8 @@ export interface Task {
 const taskStates: Task['status'][] = ['done', 'pending', 'on-hold'];
 
 const Home: FC = () => {
+
+  // TODO Bugs: sometimes list is not ordered, when deleting stuff it might mess up order or even visible rows till page refresh
 
   // query data
   const { data, isLoading, error, refetch } = useQuery({
@@ -50,6 +52,12 @@ const Home: FC = () => {
       });
       SetInputText('');
       SetSelectedState('');
+    } else {
+      SetUxError(true);
+
+      setTimeout(() => {
+        SetUxError(false);
+      }, 3000);
     }
   };
 
@@ -76,41 +84,33 @@ const Home: FC = () => {
     });
   };
 
-  useEffect(() => {
-    if (selectedState.length === 0 || inputText.length === 0) {
-      SetUxError(true);
-    } else {
-      SetUxError(false);
-    }
-  }, [selectedState, inputText]);
-
   return (
-    <div className='text-center mt-20 '>
-      <div className="flex justify-center items-center">
-        <div className="flex-col mr-5">
-          <div className="flex">
+    <div className='text-center mt-16 mb-16'>
+      <div className="flex items-center">
+        <div className="flex-col mr-5 w-full">
+          <div className="flex justify-center">
             <input className='rounded-l-xl bg-gray-600 p-2' placeholder="Take a shower..." type='text' value={inputText} onChange={(e) => SetInputText(e.target.value)} />
             <Button type={ButtonType.Send} onClick={HandleNewTask} uxError={uxError}>
             </Button>
           </div>
-          <p>errore</p>
           <div className="flex justify-center mt-5">
             {taskStates.map((status) => (
               <button
-                key={status}
-                onClick={() => selectedState === status ? SetSelectedState('') : SetSelectedState(status)}
-                className={`transition-all p-2 rounded-lg mx-2 ${selectedState === status && selectedState === 'done' ? 'bg-emerald-800' : selectedState === status && selectedState === 'pending' ? 'bg-orange-800' : selectedState === status && selectedState === 'on-hold' ? 'bg-red-800' : ''}`}>
+              key={status}
+              onClick={() => selectedState === status ? SetSelectedState('') : SetSelectedState(status)}
+              className={`transition-all p-2 rounded-lg mx-2 ${selectedState === status && selectedState === 'done' ? 'bg-emerald-800' : selectedState === status && selectedState === 'pending' ? 'bg-orange-800' : selectedState === status && selectedState === 'on-hold' ? 'bg-red-800' : ''}`}>
                 {status === 'on-hold' ? 'on hold' : status}
               </button>
             ))}
           </div>
+          <p className={`text-red-600 transition-all ${!uxError ? '-mt-5 opacity-0 pointer-events-none' : 'mt-5 opacity-100'}`}>Be sure to insert task text and status!</p>
         </div>
       </div>
 
       <div className="flex flex-col justify-center items-center mt-10">
-        <h2 className=" text-2xl">Tasks list</h2>
-        <div className="mt-10 p-20 bg-gray-600 w-fit rounded-xl">
-          {isLoading ? <Loader size={80} color="#242424" className="animate-spin-slow" /> : error ? <p>Error loading tasks...</p> :
+        <h2 className=" text-2xl">Tasks list:</h2>
+        <div className="mt-10 p-14 bg-gray-600 w-fit rounded-xl">
+          {isLoading ? <Loader size={80} color="#242424" className="animate-spin-slow" /> : error ? <div className="flex items-center p-4 rounded-lg bg-[#242424]"><CircleX size={30} className="text-red-600 mr-2" /><p>Error loading tasks...</p></div> :
           tasks.length > 0 ?
             tasks.map((task, i) =>
               <div className={`flex mb-5 ${i === tasks.length -1 && 'mb-0'}`} key={task.text}>
@@ -138,13 +138,13 @@ const Home: FC = () => {
                   <div className="">
                     <p className='rounded-l-xl p-4 w-64 text-left'>{task.text}</p>
                   </div>
-                  <div className="flex ml-auto">
-                    <div className={`m-2 p-2 rounded-lg flex items-center justify-center pointer-events-none min-w-24 ${task.status === 'done' && 'bg-emerald-800' || task.status === 'pending' && 'bg-orange-800' || task.status === 'on-hold' && 'bg-red-800'}`}>
+                  <div className="flex ml-auto items-center">
+                    <div className={`m-2 p-2 rounded-lg flex items-center justify-center pointer-events-none max-h-10 min-w-24 ${task.status === 'done' && 'bg-emerald-800' || task.status === 'pending' && 'bg-orange-800' || task.status === 'on-hold' && 'bg-red-800'}`}>
                       {task.status === 'on-hold' ? 'on hold' : task.status}
                     </div>
-                    <Button type={ButtonType.Edit} uxError={false} onClick={() => HandleEditMode(i)} />
-                    <Button type={ButtonType.Remove} uxError={false} onClick={() => HandleRemoveTask(task.id!)} />
                   </div>
+                  <Button type={ButtonType.Edit} uxError={false} onClick={() => HandleEditMode(i)} />
+                  <Button type={ButtonType.Remove} uxError={false} onClick={() => HandleRemoveTask(task.id!)} />
                 </div>
                 }
               </div>

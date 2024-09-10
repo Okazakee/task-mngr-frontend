@@ -6,7 +6,7 @@ interface FooterProps {
 
 const Footer: FC<FooterProps> = ({ children }) => {
   return (
-    <div className="absolute bottom-5 flex justify-center w-full">
+    <div className="fixed bottom-0 flex justify-center w-full bg-[#242424] h-12 items-center">
       <p>
         {children}
       </p>
