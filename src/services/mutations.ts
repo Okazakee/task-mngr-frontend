@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { Task } from "../pages/Home";
 
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = process.env.VITE_API_URL;
 
 export const useCreateTask = () => {
   return useMutation({
@@ -19,5 +19,11 @@ export const useEditTask = () => {
 export const useDeleteTask = () => {
   return useMutation({
     mutationFn: (taskId: number) => axios.delete(`${apiUrl}/tasks/${taskId}`),
+  });
+};
+
+export const useSpawnTasks = () => {
+  return useMutation({
+    mutationFn: () => axios.get(`${apiUrl}/tasks/spawn`),
   });
 };

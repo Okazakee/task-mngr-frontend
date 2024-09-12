@@ -1,35 +1,26 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useState } from "react";
 import Button from '../components/common/Button'
 import { ButtonType } from "../components/common/Button";
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { fetchTasks } from '../services/querys';
 import { Loader, CircleX } from "lucide-react";
 import { useCreateTask, useDeleteTask, useEditTask } from "../services/mutations";
 
+interface TaskPage {
+  tasks: Task[];
+  totalTasks: number;
+  hasNextPage: boolean;
+}
 export interface Task {
-  id?: number
+  id: number;
   text: string;
-  status: 'done' | 'pending' | 'on-hold' | ''
+  status: 'done' | 'pending' | 'on-hold' | '';
 }
 
-const taskStates: Task['status'][] = ['done', 'pending', 'on-hold'];
+const taskStatuses: Task['status'][] = ['done', 'pending', 'on-hold'];
 
 const Home: FC = () => {
 
-  // TODO Bugs: sometimes list is not ordered, when deleting stuff it might mess up order or even visible rows till page refresh
-
-  // query data
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['tasks'],
-    queryFn: fetchTasks,
-    staleTime: 5 * 60 * 1000
-  });
-
-  const createTask = useCreateTask();
-  const editTask = useEditTask();
-  const deleteTask = useDeleteTask();
-
-  const [tasks, SetTasks] = useState<Task[]>([]);
   const [selectedState, SetSelectedState] = useState<Task['status']>('');
   const [inputText, SetInputText] = useState('');
   const [uxError, SetUxError] = useState(false);
@@ -37,21 +28,43 @@ const Home: FC = () => {
   const [editInputText, SetEditInputText] = useState('');
   const [editStatus, SetEditStatus] = useState<Task['status']>('pending');
 
-  useEffect(() => {
-    if (data) {
-      SetTasks(data);
+  // query data
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    refetch
+  } = useInfiniteQuery({
+    queryKey: ['tasks'],
+    queryFn: fetchTasks,
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage.hasNextPage ? allPages.length : undefined;
     }
-  }, [data]);
+  })
 
-  const HandleNewTask = () => {
+  const createTask = useCreateTask();
+  const editTask = useEditTask();
+  const deleteTask = useDeleteTask();
+
+  const taskPages = data?.pages as TaskPage[];
+  const allTasks = taskPages?.length > 0 ? taskPages.flatMap(page => page.tasks) : [];
+
+  const handleNewTask = () => {
     if (selectedState.length > 0 && inputText.length > 0) {
-      createTask.mutate({ text: inputText, status: selectedState }, {
-        onSuccess: () => {
-          refetch();
+      createTask.mutate(
+        { id: 0, text: inputText, status: selectedState },
+        {
+          onSuccess: () => {
+            SetInputText('');
+            SetSelectedState('');
+            refetch();
+          },
         }
-      });
-      SetInputText('');
-      SetSelectedState('');
+      );
     } else {
       SetUxError(true);
 
@@ -63,38 +76,50 @@ const Home: FC = () => {
 
   const HandleEditMode = (taskID: number) => {
     SetEditMode({ taskID, edit: true });
-    SetEditInputText(tasks[taskID].text);
-    SetEditStatus(tasks[taskID].status);
+    SetEditInputText(allTasks[taskID].text);
+    SetEditStatus(allTasks[taskID].status);
   };
 
-  const SaveEditedTask = (taskID: number) => {
-    editTask.mutate({id: taskID, text: editInputText, status: editStatus }, {
-      onSuccess: () => {
-        refetch();
-      }
-    });
-    SetEditMode({ taskID: -1, edit: false });
+  const saveEditedTask = (taskID: number, taskText: string, taskStatus: string) => {
+
+    // check diffs
+    if (editInputText === taskText && editStatus === taskStatus) {
+      SetEditMode({ taskID: -1, edit: false });
+    } else {
+      editTask.mutate(
+        {id: taskID, text: editInputText, status: editStatus },
+        {
+          onSuccess: () => {
+            refetch();
+          },
+        }
+      );
+
+      SetEditMode({ taskID: -1, edit: false });
+    }
   };
 
-  const HandleRemoveTask = (taskIndex: number) => {
-    deleteTask.mutate(taskIndex, {
-      onSuccess: () => {
-        refetch();
+  const handleRemoveTask = (taskIndex: number) => {
+    deleteTask.mutate(
+      taskIndex, {
+        onSuccess: () => {
+          refetch();
+        },
       }
-    });
+  );
   };
 
   return (
-    <div className='text-center mt-16 mb-16'>
+    <div className='text-center mt-10 mb-16'>
       <div className="flex items-center">
-        <div className="flex-col mr-5 w-full">
+        <div className="flex-col w-full">
           <div className="flex justify-center">
             <input className='rounded-l-xl bg-gray-600 p-2' placeholder="Take a shower..." type='text' value={inputText} onChange={(e) => SetInputText(e.target.value)} />
-            <Button type={ButtonType.Send} onClick={HandleNewTask} uxError={uxError}>
+            <Button type={ButtonType.Send} onClick={handleNewTask} uxError={uxError}>
             </Button>
           </div>
           <div className="flex justify-center mt-5">
-            {taskStates.map((status) => (
+            {taskStatuses.map((status) => (
               <button
               key={status}
               onClick={() => selectedState === status ? SetSelectedState('') : SetSelectedState(status)}
@@ -108,49 +133,53 @@ const Home: FC = () => {
       </div>
 
       <div className="flex flex-col justify-center items-center mt-10">
-        <h2 className=" text-2xl">Tasks list:</h2>
-        <div className="mt-10 p-14 bg-gray-600 w-fit rounded-xl">
+        <h2 className="text-2xl">Tasks list:</h2>
+        <div className="mt-10 p-8 lg:p-14 bg-gray-600 w-fit rounded-xl">
           {isLoading ? <Loader size={80} color="#242424" className="animate-spin-slow" /> : error ? <div className="flex items-center p-4 rounded-lg bg-[#242424]"><CircleX size={30} className="text-red-600 mr-2" /><p>Error loading tasks...</p></div> :
-          tasks.length > 0 ?
-            tasks.map((task, i) =>
-              <div className={`flex mb-5 ${i === tasks.length -1 && 'mb-0'}`} key={task.text}>
-                {editMode.edit && editMode.taskID === i ?
-                  <div className="flex items-center bg-[#1a1a1a] pl-2 rounded-xl w-full">
-                    <input
-                      className="rounded-xl p-2 bg-[#262626]"
-                      value={editInputText}
-                      onChange={(e) => SetEditInputText(e.target.value)}
-                    />
-                    <div className="flex justify-center">
-                      {taskStates.map((status) => (
-                        <button
-                          key={status}
-                          onClick={() => SetEditStatus(status)}
-                          className={`p-2 rounded-lg mx-2 ${editStatus === status && editStatus === 'done' && 'bg-emerald-800' || editStatus === status && editStatus === 'pending' && 'bg-orange-800' || editStatus === status && editStatus === 'on-hold' && 'bg-red-800'}`}>
-                          {status === 'on-hold' ? 'on hold' : status}
-                        </button>
-                      ))}
+          allTasks.length > 0 ?
+              allTasks.map((task: Task, i: number) =>
+                <div className={`flex ${i === allTasks.length - 1 ? 'mb-0' : 'mb-5'}`} key={task.id}>
+                  {editMode.edit && editMode.taskID === i ?
+                    <div className="flex items-center bg-[#1a1a1a] pl-2 rounded-xl w-full">
+                      <input
+                        className="rounded-xl p-2 bg-[#262626]"
+                        value={editInputText}
+                        onChange={(e) => SetEditInputText(e.target.value)}
+                      />
+                      <div className="flex justify-center">
+                        {taskStatuses.map((status) => (
+                          <button
+                            key={status}
+                            onClick={() => SetEditStatus(status)}
+                            className={`p-2 rounded-lg mx-2 ${editStatus === status && editStatus === 'done' && 'bg-emerald-800' || editStatus === status && editStatus === 'pending' && 'bg-orange-800' || editStatus === status && editStatus === 'on-hold' && 'bg-red-800'}`}>
+                            {status === 'on-hold' ? 'on hold' : status}
+                          </button>
+                        ))}
+                      </div>
+                      <Button type={ButtonType.EditDone} uxError={false} onClick={() => saveEditedTask(task.id!, task.text, task.status)} />
                     </div>
-                    <Button type={ButtonType.EditDone} uxError={false} onClick={() => SaveEditedTask(task.id!)} />
-                  </div>
-                :
-                <div className="bg-[#1a1a1a] flex rounded-xl w-full">
-                  <div className="">
-                    <p className='rounded-l-xl p-4 w-64 text-left'>{task.text}</p>
-                  </div>
-                  <div className="flex ml-auto items-center">
-                    <div className={`m-2 p-2 rounded-lg flex items-center justify-center pointer-events-none max-h-10 min-w-24 ${task.status === 'done' && 'bg-emerald-800' || task.status === 'pending' && 'bg-orange-800' || task.status === 'on-hold' && 'bg-red-800'}`}>
-                      {task.status === 'on-hold' ? 'on hold' : task.status}
+                  :
+                  <div className="bg-[#1a1a1a] flex rounded-xl w-full">
+                    <div className="">
+                      <p className='rounded-l-xl p-4 w-48 lg:w-64 text-left'>{task.text}</p>
+                    </div>
+                    <div className="flex ml-auto items-center">
+                      <div className={`m-2 p-2 rounded-lg flex items-center justify-center pointer-events-none max-h-10 min-w-20 lg:min-w-24 ${task.status === 'done' && 'bg-emerald-800' || task.status === 'pending' && 'bg-orange-800' || task.status === 'on-hold' && 'bg-red-800'}`}>
+                        {task.status === 'on-hold' ? 'on hold' : task.status}
+                      </div>
+                    </div>
+                    <div className="lg:flex">
+                      <Button type={ButtonType.Edit} uxError={false} onClick={() => HandleEditMode(i)} />
+                      <Button type={ButtonType.Remove} uxError={false} onClick={() => handleRemoveTask(task.id)} />
                     </div>
                   </div>
-                  <Button type={ButtonType.Edit} uxError={false} onClick={() => HandleEditMode(i)} />
-                  <Button type={ButtonType.Remove} uxError={false} onClick={() => HandleRemoveTask(task.id!)} />
+                  }
                 </div>
-                }
-              </div>
-            )
+              )
           :
-            <p>There are no tasks right now.</p>}
+            <p>There are no tasks right now.</p>
+          }
+          {taskPages && taskPages.length > 0 && hasNextPage && <button onClick={() => fetchNextPage()} className="mt-12 rounded-xl p-2">{isFetchingNextPage ? 'Fetching tasks...' : 'Load more...'}</button>}
         </div>
       </div>
     </div>

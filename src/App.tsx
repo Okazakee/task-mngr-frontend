@@ -7,7 +7,7 @@ function App() {
 
   return (
     <>
-      <Header>Task manager app</Header>
+      <Header>Task manager</Header>
 
       <Home />
 
