@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
-import { Task } from "../pages/Home";
+import { Task } from "../pages/Dashboard";
 
 const apiUrl = process.env.VITE_API_URL;
 
