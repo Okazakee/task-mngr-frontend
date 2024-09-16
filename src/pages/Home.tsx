@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useState, useEffect } from "react";
 import Button from '../components/common/Button'
 import { ButtonType } from "../components/common/Button";
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -17,9 +17,10 @@ export interface Task {
   status: 'done' | 'pending' | 'on-hold' | '';
 }
 
-const taskStatuses: Task['status'][] = ['done', 'pending', 'on-hold'];
-
 const Home: FC = () => {
+
+  const taskStatuses: Task['status'][] = ['done', 'pending', 'on-hold'];
+  const placeholders: string[] = ['Take a shower...', 'Start a new minecraft server...', 'Touch grass...', 'Watch mating tutorials...', 'Uninstall Riot Launcher...', 'Refresh room opening the Windows (VMs)', 'Finally get to know this misterious Ligma...'];
 
   const [selectedState, SetSelectedState] = useState<Task['status']>('');
   const [inputText, SetInputText] = useState('');
@@ -27,6 +28,7 @@ const Home: FC = () => {
   const [editMode, SetEditMode] = useState({ taskID: -1, edit: false });
   const [editInputText, SetEditInputText] = useState('');
   const [editStatus, SetEditStatus] = useState<Task['status']>('pending');
+  const [placeholder, setPlaceholder] = useState<string>(placeholders[0]);
 
   // query data
   const {
@@ -43,7 +45,9 @@ const Home: FC = () => {
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.hasNextPage ? allPages.length : undefined;
-    }
+    },
+    refetchOnWindowFocus: false,
+    refetchOnMount: false
   })
 
   const createTask = useCreateTask();
@@ -109,12 +113,33 @@ const Home: FC = () => {
   );
   };
 
+  // useeffects
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setPlaceholder((prev) => {
+        let newPlaceholder;
+        const availablePlaceholders = placeholders.filter(p => p !== prev);
+
+        if (availablePlaceholders.length === 0) {
+          // Edge case: no other placeholders available
+          return prev;
+        }
+
+        const randIndex = Math.floor(Math.random() * availablePlaceholders.length);
+        newPlaceholder = availablePlaceholders[randIndex];
+        return newPlaceholder;
+      });
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   return (
     <div className='text-center mt-10 mb-16'>
       <div className="flex items-center">
         <div className="flex-col w-full">
           <div className="flex justify-center">
-            <input className='rounded-l-xl bg-gray-600 p-2' placeholder="Take a shower..." type='text' value={inputText} onChange={(e) => SetInputText(e.target.value)} />
+            <input id="animated-input" className='transition-all rounded-l-xl bg-gray-600 w-[22rem] p-2' placeholder={placeholder} type='text' value={inputText} onChange={(e) => SetInputText(e.target.value)} />
             <Button type={ButtonType.Send} onClick={handleNewTask} uxError={uxError}>
             </Button>
           </div>
@@ -135,7 +160,7 @@ const Home: FC = () => {
       <div className="flex flex-col justify-center items-center mt-10">
         <h2 className="text-2xl">Tasks list:</h2>
         <div className="mt-10 p-8 lg:p-14 bg-gray-600 w-fit rounded-xl">
-          {isLoading ? <Loader size={80} color="#242424" className="animate-spin-slow" /> : error ? <div className="flex items-center p-4 rounded-lg bg-[#242424]"><CircleX size={30} className="text-red-600 mr-2" /><p>Error loading tasks...</p></div> :
+          {isLoading ? <Loader size={60} color="#747bff" className="animate-spin-slow" /> : error ? <div className="flex items-center p-4 rounded-lg bg-[#242424]"><CircleX size={30} className="text-red-600 mr-2" /><p>Error loading tasks...</p></div> :
           allTasks.length > 0 ?
               allTasks.map((task: Task, i: number) =>
                 <div className={`flex ${i === allTasks.length - 1 ? 'mb-0' : 'mb-5'}`} key={task.id}>
@@ -156,7 +181,7 @@ const Home: FC = () => {
                           </button>
                         ))}
                       </div>
-                      <Button type={ButtonType.EditDone} uxError={false} onClick={() => saveEditedTask(task.id!, task.text, task.status)} />
+                      <Button type={editInputText === task.text && editStatus === task.status ? ButtonType.Close : ButtonType.EditDone} uxError={false} onClick={() => saveEditedTask(task.id!, task.text, task.status)} />
                     </div>
                   :
                   <div className="bg-[#1a1a1a] flex rounded-xl w-full">
@@ -179,7 +204,7 @@ const Home: FC = () => {
           :
             <p>There are no tasks right now.</p>
           }
-          {taskPages && taskPages.length > 0 && hasNextPage && <button onClick={() => fetchNextPage()} className="mt-12 rounded-xl p-2">{isFetchingNextPage ? 'Fetching tasks...' : 'Load more...'}</button>}
+          {!error && taskPages && taskPages.length > 0 && hasNextPage && <button onClick={() => fetchNextPage()} className="transition-all mt-12 rounded-xl p-2">{isFetchingNextPage ? 'Fetching tasks...' : 'Load more...'}</button>}
         </div>
       </div>
     </div>
