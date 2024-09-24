@@ -1,7 +1,7 @@
 import {Dispatch, FC, SetStateAction} from 'react';
 import EditTaskLabels from './EditTaskLabels';
 import Button, { ButtonType } from '../atoms/Button';
-import { statuses, Task } from '../../pages/Dashboard';
+import { statuses, Task } from '../pages/Dashboard';
 
 interface EditTaskProps {
   editInputText: string;

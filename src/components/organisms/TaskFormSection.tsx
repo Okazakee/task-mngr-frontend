@@ -2,7 +2,7 @@ import { Dispatch, FC, SetStateAction, useEffect, useState } from "react";
 import TaskInputForm from "../molecules/TaskInputForm";
 import TaskStatusLabel, { StatusLabelMode } from "../atoms/TaskStatusLabel";
 import ErrorMessage from "../atoms/ErrorMessage";
-import { statuses, taskStatuses } from "../../routes/index";
+import { statuses, taskStatuses } from "../pages/Dashboard";
 
 interface TaskFormProps {
   inputText: string;

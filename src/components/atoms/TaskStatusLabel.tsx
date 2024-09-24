@@ -1,5 +1,5 @@
 import { FC, Dispatch, SetStateAction } from "react";
-import { statuses } from "../../routes/index";
+import { statuses } from "../pages/Dashboard";
 
 export enum StatusLabelMode {
   Normal = 'normal',

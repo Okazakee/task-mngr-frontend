@@ -1,6 +1,6 @@
 import {FC} from 'react';
 import Button, { ButtonType } from '../atoms/Button';
-import { Task } from '../../pages/Dashboard';
+import { Task } from '../pages/Dashboard';
 
 interface TaskRowProps {
   task: Task;

@@ -2,7 +2,7 @@ import { CircleX, Loader } from "lucide-react";
 import { Dispatch, FC, SetStateAction } from "react";
 import EditTaskRow from "../molecules/EditTaskRow";
 import TaskRow from "../molecules/TaskRow";
-import { statuses, Task, TaskPage } from "../../pages/Dashboard";
+import { statuses, Task, TaskPage } from "../pages/Dashboard";
 import Button, { ButtonType } from "../atoms/Button";
 
 interface TaskListProps {

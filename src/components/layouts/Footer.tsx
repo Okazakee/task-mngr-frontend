@@ -1,5 +1,6 @@
 import { FC, ReactNode } from "react";
 import { useSpawnTasks } from "../../services/mutations";
+import { Link } from '@tanstack/react-router'
 
 interface FooterProps {
   children: ReactNode;
@@ -15,6 +16,8 @@ const Footer: FC<FooterProps> = ({ children }) => {
         {children}
       </p>
       <button className="ml-5 p-2" onClick={() => spawnTasks.mutate()}>Spawn tasks</button>
+      <Link className="ml-5 p-2" to="/">Home</Link>
+      <Link className="ml-5 p-2" to="/about">About</Link>
     </div>
   );
 };
