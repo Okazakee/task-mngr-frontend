@@ -1,5 +1,5 @@
 import {Dispatch, FC, SetStateAction} from 'react';
-import { statuses, taskStatuses } from '../../pages/Dashboard';
+import { statuses, taskStatuses } from '../../routes/index';
 import Button, { ButtonType } from '../atoms/Button';
 import { statusColors } from '../atoms/TaskStatusLabel';
 
