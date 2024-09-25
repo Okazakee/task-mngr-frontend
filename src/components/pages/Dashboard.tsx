@@ -65,9 +65,11 @@ export const Dashboard: FC = () => {
   const deleteTask = useDeleteTask()
 
   const taskPages = data?.pages as TaskPage[]
-  const allTasks =
-    taskPages?.length > 0 ? taskPages.flatMap((page) => page.tasks) : []
 
+  const allTasks = taskPages?.length > 0 ? taskPages.flatMap((page) => page.tasks) : [];
+  //TODO bug here, check later
+  console.log(taskPages?.flatMap((page) => page.tasks))
+  
   //mutations
   const handleNewTask = () => {
     if (selectedStatus.length > 0 && inputText.length > 0) {

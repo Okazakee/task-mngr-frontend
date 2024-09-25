@@ -1,29 +1,32 @@
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
+import { apiUrl, token } from '../main';
 
-const apiUrl = process.env.VITE_API_URL;
+export const useAuth = () => {
 
-export const isAuthenticated = () => {
-  const token = localStorage.getItem('authToken');
+  const isLogged = async () => {
 
-  if (!token) {
-    return false; // No token means the user is not authenticated
+    const { data } = await axios.get(`${apiUrl}/auth/verify`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const valid = data.message === 'Token is valid';
+
+    return valid
   }
 
-  try {
+  const signIn = () => {
+    // query receiving jwt token
+    localStorage.setItem('authToken', 'true');
+  };
 
-    verifyJWT(token)
+  const signOut = () => {
+    localStorage.removeItem('authToken');
+  };
 
-  } catch (error) {
-    const axiosError = error as AxiosError;
-    console.error('Token verification failed', axiosError.response?.data || axiosError.message);
-    return false; // If token verification fails, return false
-  }
+  return { signIn, signOut, isLogged };
+
 };
 
-const verifyJWT = async (token: string) => {
-  return await axios.get(`${apiUrl}/auth/verify`, {
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  });
-}
+export type AuthContext = ReturnType<typeof useAuth>;
