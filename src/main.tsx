@@ -3,9 +3,9 @@ import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen'
-
 import './index.css'
 import { useAuth } from './services/authService';
+import axios from 'axios';
 
 const router = createRouter({
   routeTree,
@@ -14,11 +14,9 @@ const router = createRouter({
 
 const queryClient = new QueryClient();
 
-export const apiUrl = process.env.VITE_API_URL;
-
-export const token = localStorage.getItem('authToken');
-
 const authentication = useAuth();
+
+axios.defaults.withCredentials = true;
 
 declare module '@tanstack/react-router' {
   interface Register {

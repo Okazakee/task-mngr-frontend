@@ -1,9 +1,13 @@
 import { FC } from 'react';
-import { login } from '../../services/mutations';
+import { useLogin } from '../../services/mutations';
+import { useAuth } from '../../services/authService';
 
 const About: FC = () => {
 
-  const asd = login();
+  const {username, email} = JSON.parse(localStorage.getItem('userInfo') || 'false');
+
+  const {signOut} = useAuth();
+  const login = useLogin();
   return (
     <>
       <div className='flex justify-center'>
@@ -15,16 +19,15 @@ const About: FC = () => {
         </div>
       </div>
       <div className='flex justify-center mt-10'>
-          <h2 className='text-2xl text-center'>Tech stack:</h2>
+          <h2 className='text-2xl text-center'>User info:</h2>
       </div>
-        <div className='flex justify-between mt-10 w-[10%]'>
-          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vitejs/vitejs-original.svg" />
-          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/express/express-original.svg" />
-          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/typescript/typescript-original.svg" />
-          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/sqlite/sqlite-original.svg" />
-          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original-wordmark.svg" />
+        <div className='justify-between mt-10 text-center'>
+          <p>username: {username}</p>
+          <p>email: {email}</p>
+          <button className='mr-5 p-2 mt-10' onClick={() => login.mutate()}>register</button>
+          <button className='mr-5 p-2 mt-10' onClick={() => login.mutate()}>login</button>
+          <button className='mr-5 p-2' onClick={() => signOut()}>sign out</button>
         </div>
-        <button onClick={() => asd.mutate()}>login</button>
     </>
   )
 };
