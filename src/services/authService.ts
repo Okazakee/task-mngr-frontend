@@ -1,19 +1,20 @@
 import axios from 'axios';
-import { apiUrl, token } from '../main';
+import { apiUrl } from '../main';
+
+//TODO find a way to use mutations here without triggering hook call issue
 
 export const useAuth = () => {
 
   const isLogged = async () => {
+    try {
 
-    const { data } = await axios.get(`${apiUrl}/auth/verify`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      return (await axios.get(`${apiUrl}/auth/verify`)).status && true;
 
-    const valid = data.message === 'Token is valid';
+    } catch (error) {
+      console.log('asdasd')
+      return false
 
-    return valid
+    }
   }
 
   const signIn = () => {

@@ -1,6 +1,9 @@
 import { FC } from 'react';
+import { login } from '../../services/mutations';
 
 const About: FC = () => {
+
+  const asd = login();
   return (
     <>
       <div className='flex justify-center'>
@@ -21,6 +24,7 @@ const About: FC = () => {
           <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/sqlite/sqlite-original.svg" />
           <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original-wordmark.svg" />
         </div>
+        <button onClick={() => asd.mutate()}>login</button>
     </>
   )
 };
