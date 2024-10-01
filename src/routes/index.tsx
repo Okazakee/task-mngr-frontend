@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import Dashboard from '../components/pages/Dashboard'; // Import your Dashboard component
+import Dashboard from '../components/pages/Dashboard';
 
 export const Route = createFileRoute('/')({
   beforeLoad: async ({ location, context }) => {

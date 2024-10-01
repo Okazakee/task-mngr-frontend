@@ -128,7 +128,6 @@ export const Dashboard: FC = () => {
 
   return (
     <>
-      <h1 className="text-center mt-10">Task Manager</h1>
       <div className="text-center mt-10 mb-16">
         <TaskFormSection
           inputText={inputText}

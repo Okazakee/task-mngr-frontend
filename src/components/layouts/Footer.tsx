@@ -1,5 +1,4 @@
 import { FC, ReactNode } from "react";
-import { Link } from '@tanstack/react-router'
 
 interface FooterProps {
   children: ReactNode;
@@ -12,10 +11,6 @@ const Footer: FC<FooterProps> = ({ children }) => {
       <p>
         {children}
       </p>
-      <Link className="ml-5 p-2" to="/">Home</Link>
-      <Link className="ml-5 p-2" to="/about">About</Link>
-      <Link className="ml-5 p-2" to="/login">Login</Link>
-      <Link className="ml-5 p-2" to="/register">Register</Link>
     </div>
   );
 };

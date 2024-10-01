@@ -2,6 +2,7 @@ import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import Footer from '../components/layouts/Footer'
 import { AuthContext } from '../services/authService';
+import Header from '../components/layouts/Header';
 
 type RouterContext = {
   authentication: AuthContext;
@@ -10,9 +11,13 @@ type RouterContext = {
 export const Route = createRootRouteWithContext<RouterContext>()({
   component: () => (
     <>
+      <Header>
+        Task Manager
+      </Header>
+
       <Outlet />
 
-      <Footer>Simple task management app by Okazakee</Footer>
+      <Footer>Made by Okazakee</Footer>
 
       <TanStackRouterDevtools />
     </>

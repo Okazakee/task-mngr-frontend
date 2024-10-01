@@ -19,7 +19,6 @@ export const useAuth = () => {
 
         return logged;
       } catch (error) {
-        console.error('Error verifying authentication:', error);
         return false; // Return false if the request fails
       }
     } else {
@@ -33,12 +32,12 @@ export const useAuth = () => {
   };
 
   const signOut = async () => {
-
-    await axios.get(`${apiUrl}/auth/logout`);
-
     // remove cookie and user info
     Cookies.remove('localAuth');
     localStorage.removeItem('userInfo');
+
+    await axios.get(`${apiUrl}/auth/logout`);
+
   };
 
   return { signIn, signOut, isLogged };
