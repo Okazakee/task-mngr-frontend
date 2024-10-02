@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { UserSquare, ChevronDown } from "lucide-react";
 import { FC, ReactNode } from "react";
+import { useAuth } from "../../services/authService";
 
 interface HeaderProps {
   children: ReactNode;
@@ -8,10 +9,12 @@ interface HeaderProps {
 
 const Header: FC<HeaderProps> = ({ children }) => {
 
+  const { signOut } = useAuth();
+
   const {username} = JSON.parse(localStorage.getItem('userInfo') || 'false');
 
   return (
-    <h1 className="text-center mt-10">
+    <h1 className="text-center mt-5">
       <div className='flex mx-5 items-center justify-between relativ cursor-pointer'>
         <div className='text-sm bg-[#1a1a1a] rounded-xl p-3 flex items-center'>
           <UserSquare
@@ -32,6 +35,7 @@ const Header: FC<HeaderProps> = ({ children }) => {
           <Link className="p-2" to="/about">About</Link>
           <Link className="p-2" to="/login">Login</Link>
           <Link className="p-2" to="/register">Register</Link>
+          <a className="p-2" onClick={() => signOut()}>Sign Out</a>
         </div>
       </div>
     </h1>

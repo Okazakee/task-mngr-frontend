@@ -29,7 +29,7 @@ export const useSpawnTasks = () => {
 
 export const useLogin = () => {
   return useMutation({
-    mutationFn: () => axios.post(`${apiUrl}/auth/login`, {username: 'user', password: '123', staylogged: false})
+    mutationFn: () => axios.post(`${apiUrl}/auth/login`, {username: 'okazakee', password: 'caccamolla', staylogged: false})
     .then(res => localStorage.setItem('userInfo', JSON.stringify({
       username: res.data.username,
       email: res.data.email
